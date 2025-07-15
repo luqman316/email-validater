@@ -1,69 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// /* eslint-disable @typescript-eslint/no-explicit-any */
-// import { NextRequest, NextResponse } from 'next/server';
-// import fs from 'fs';
-// import path from 'path';
-// import { parse } from 'csv-parse/sync';
-// import { isValidEmail } from '@/app/utils/emailValidator';
-
-// type EmailRow = {
-//   email: string;
-// };
-
-// function delay(ms: number) {
-//   return new Promise((resolve) => setTimeout(resolve, ms));
-// }
-
-// export async function POST(req: NextRequest) {
-//   const formData = await req.formData();
-//   const file = formData.get('file') as File;
-
-//   if (!file) {
-//     return NextResponse.json({ message: 'No file uploaded.' }, { status: 400 });
-//   }
-
-//   const buffer = Buffer.from(await file.arrayBuffer());
-//   const logPath = path.join(process.cwd(), 'logs/processed.txt');
-//   const logStream = fs.createWriteStream(logPath, { flags: 'a' });
-
-//   let records: EmailRow[];
-
-//   try {
-//     records = parse(buffer, {
-//       columns: true,
-//       skip_empty_lines: true,
-//       trim: true,
-//     }) as EmailRow[];
-//   } catch (error) {
-//     return NextResponse.json({ message: 'Failed to parse CSV.' }, { status: 500 });
-//   }
-
-//   for (const row of records) {
-//     const email = row.email?.trim();
-//     if (!email) continue;
-
-//     try {
-//       const valid = await isValidEmail(email);
-//       if (valid) {
-//         console.log(`Valid: ${email}`);
-//         logStream.write(`Valid: ${email}\n`);
-//       } else {
-//         console.log(`Invalid: ${email}`);
-//         logStream.write(`Invalid: ${email}\n`);
-//       }
-//     } catch (err: any) {
-//       console.error(`Error processing ${email}: ${err.message}`);
-//       logStream.write(`Error: ${email} - ${err.message}\n`);
-//     }
-
-//     await delay(1200);
-//   }
-
-//   logStream.end();
-
-//   return NextResponse.json({ message: 'Emails processed successfully.' });
-// }
-
 import { NextRequest, NextResponse } from "next/server";
 import { parse } from "csv-parse/sync";
 
@@ -147,3 +82,80 @@ export async function POST(req: NextRequest) {
     },
   });
 }
+
+// import { parse } from "csv-parse/sync";
+// import { NextRequest, NextResponse } from "next/server";
+// // import { isValidEmail } from '@/utils/emailValidator';
+// import { isValidEmail } from "@/app/utils/emailValidator";
+// import { createObjectCsvStringifier } from "csv-writer";
+
+// function delay(ms: number): Promise<void> {
+//   return new Promise((resolve) => setTimeout(resolve, ms));
+// }
+// export async function POST(req: NextRequest) {
+//   const formData = await req.formData();
+//   const file: File | null = formData.get("file") as File;
+
+//   if (!file)
+//     return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+
+//   const buffer = Buffer.from(await file.arrayBuffer());
+//   const csvText = buffer.toString("utf-8");
+
+//   let rows: { email: string }[] = [];
+
+//   try {
+//     rows = parse(csvText, {
+//       columns: true,
+//       skip_empty_lines: true,
+//       trim: true,
+//     });
+//   } catch (err) {
+//     return NextResponse.json({ error: "Invalid CSV format" }, { status: 400 });
+//   }
+
+//   const seen = new Set<string>();
+//   const validRows: { email: string }[] = [];
+//   const invalidRows: { email: string }[] = [];
+//   const duplicates: string[] = [];
+
+//   for (const row of rows) {
+//     const email = row.email.trim().toLowerCase();
+
+//     if (seen.has(email)) {
+//       duplicates.push(email);
+//       continue;
+//     }
+
+//     seen.add(email);
+
+//     await delay(1200);
+
+//     const isValid = await isValidEmail(email);
+
+//     if (isValid) validRows.push({ email });
+//     else invalidRows.push({ email });
+//   }
+
+//   const allResults = [...validRows, ...invalidRows];
+//   const csvStringifier = createObjectCsvStringifier({
+//     header: [{ id: "email", title: "email" }],
+//   });
+
+//   const csv =
+//     csvStringifier.getHeaderString() +
+//     csvStringifier.stringifyRecords(allResults);
+
+//   return new Response(csv, {
+//     status: 200,
+//     headers: {
+//       "Content-Type": "text/csv",
+//       "Content-Disposition": 'attachment; filename="processed_emails.csv"',
+//       // 👇 Send result metadata in header
+//       "X-Result-Total": rows.length.toString(),
+//       "X-Result-Valid": validRows.length.toString(),
+//       "X-Result-Invalid": invalidRows.length.toString(),
+//       "X-Result-Duplicates": duplicates.length.toString(),
+//     },
+//   });
+// }
